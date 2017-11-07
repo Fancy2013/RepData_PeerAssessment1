@@ -1,16 +1,12 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
 
 
 ## Loading and preprocessing the data
 
 Load the data (note that the data is already archived in the repository).
 
-```{r}
+
+```r
 unzip("activity.zip")
 activityDF <- read.csv( "activity.csv",
 	sep=",",
@@ -22,14 +18,26 @@ activityDF <- read.csv( "activity.csv",
 
 We ignore (filter out) the missing values (NAs) in the dataset for the first part.
 
-```{r}
+
+```r
 completeDF <- activityDF[!is.na(activityDF$steps),]
 ```
 
 Summarize complete (without NAs) activity data.
 
-```{r}
+
+```r
 summary(completeDF)
+```
+
+```
+##      steps            date              interval     
+##  Min.   :  0.00   Length:15264       Min.   :   0.0  
+##  1st Qu.:  0.00   Class :character   1st Qu.: 588.8  
+##  Median :  0.00   Mode  :character   Median :1177.5  
+##  Mean   : 37.38                      Mean   :1177.5  
+##  3rd Qu.: 12.00                      3rd Qu.:1766.2  
+##  Max.   :806.00                      Max.   :2355.0
 ```
 
 
@@ -37,20 +45,33 @@ summary(completeDF)
 
 A Histogram of the total number of steps taken each day,
 
-```{r}
+
+```r
 stepsByDate <- aggregate(steps ~ date, data = completeDF, FUN=sum)
 barplot(stepsByDate$steps, names.arg = stepsByDate$date, xlab = "Date", ylab = "number of steps")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
 Mean  of total number of steps taken per day
-```{r}
+
+```r
 mean(stepsByDate$steps)
+```
+
+```
+## [1] 10766.19
 ```
 
 Median of total number of steps taken per day
 
-```{r}
+
+```r
 median(stepsByDate$steps) 
+```
+
+```
+## [1] 10765
 ```
 
 
@@ -59,15 +80,23 @@ median(stepsByDate$steps)
 
 Time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
-```{r}
+
+```r
 stepsByInterval <- aggregate(steps~interval, data = completeDF, FUN = mean)
 plot(stepsByInterval, type="l")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+
 selet Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps
 
-```{r}
+
+```r
 stepsByInterval$interval[which.max(stepsByInterval$steps)]
+```
+
+```
+## [1] 835
 ```
 
 
@@ -79,13 +108,19 @@ Calculate and report the total number of missing values in the dataset (i.e. the
 
 Total number of missing values in the data set is the number of measured steps minus the number of complete rows,
 
-```{r}
+
+```r
 length(activityDF$steps) - length(completeDF$steps)
+```
+
+```
+## [1] 2304
 ```
 
 Devise a strategy for filling in all of the missing values in the dataset. The strategy does not need to be sophisticated. For example, you could use the mean/median for that day, or the mean for that 5-minute interval, etc. Create a new dataset that is equal to the original dataset but with the missing data filled in.
 
-```{r}
+
+```r
 stepsByDate <- aggregate(steps ~ date, data = activityDF, FUN=sum)
 filledDF <- merge(activityDF, stepsByDate, by="date", suffixes=c("",".new"))
 naSteps <- is.na(filledDF$steps)
@@ -95,21 +130,34 @@ filledDF <- filledDF[,1:3]
 
 Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day.
 
-```{r}
+
+```r
 stepsByDate <- aggregate(steps ~ date, data=filledDF, FUN=sum)
 barplot(stepsByDate$steps, names.arg=stepsByDate$date, xlab="Date", ylab="Number of Steps")
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+
 Mean for the missing data filled in.
 
-```{r}
+
+```r
 mean(stepsByDate$steps)
+```
+
+```
+## [1] 10766.19
 ```
 
 Median for missing data filled in.
 
-```{r}
+
+```r
 median(stepsByDate$steps)
+```
+
+```
+## [1] 10765
 ```
 
 Do these values differ from the estimates from the first part of the assignment?
@@ -127,7 +175,8 @@ For this part the weekdays() function may be of some help here. Use the dataset 
 
 Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 
-```{r}
+
+```r
 WeekPart <- function(date) {
 	if(weekdays(as.Date(date)) %in% c("Saturday", "Sunday")) {
 		day <- "Weekend"
@@ -140,9 +189,16 @@ filledDF$weekPart <- as.factor(sapply(filledDF$date, WeekPart))
 
 Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
 
-```{r}
-library(reshape2)
 
+```r
+library(reshape2)
+```
+
+```
+## Warning: package 'reshape2' was built under R version 3.4.1
+```
+
+```r
 melted <- melt(filledDF, measure.vars="steps")
 
 meanSteps <- dcast(melted, weekPart+interval~variable, mean)
@@ -157,4 +213,6 @@ xyplot(steps~interval|weekPart,
 	layout=c(1,2)
 )
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-15-1.png)<!-- -->
 
